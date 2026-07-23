@@ -142,6 +142,11 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--card-bg);border:1.5px solid var(--silver);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:12px;font-weight:700;opacity:0;transition:.25s;z-index:9999;pointer-events:none;white-space:nowrap;max-width:88vw;text-align:center;}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
 #toast.danger{border-color:#ff4d4d;color:#ff4d4d;}
+
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stats-cell{background:rgba(0,0,0,.4);border:1px solid rgba(192,200,216,.25);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px;}
+.stats-cell-lbl{font-size:10px;color:var(--dim);font-weight:600;letter-spacing:.3px;}
+.stats-cell-val{font-size:18px;font-weight:800;color:#fff;}
 </style>
 </head>
 <body>
@@ -235,7 +240,10 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
       <div class="edit-title">Add Support Agent</div>
       <div class="edit-row">
         <input class="edit-in" id="sup-agent-name" placeholder="Agent name">
-        <button class="edit-btn gold" onclick="generateSupCode()">Generate</button>
+        <input class="edit-in" id="sup-agent-username" placeholder="Username">
+      </div>
+      <div class="edit-row">
+        <button class="edit-btn gold" onclick="generateSupCode()" style="width:100%;">Generate Code</button>
       </div>
     </div>
     <div id="sup-codes-list"></div>
@@ -617,21 +625,29 @@ function openSupUserMgmt(){
 
 async function generateSupCode(){
   const name=(document.getElementById('sup-agent-name').value||'').trim();
+  const username=(document.getElementById('sup-agent-username').value||'').trim();
   if(!name){showToast('Enter agent name.','danger');return;}
+  if(!username){showToast('Enter username.','danger');return;}
+  const exists=await db.ref('support_agents/'+username).get();
+  if(exists.exists()){showToast('Username already exists.','danger');return;}
   let code='';
   for(let i=0;i<8;i++)code+=String.fromCharCode(65+Math.floor(Math.random()*26));
   code+=Math.floor(1000+Math.random()*9000);
-  await db.ref('support_agents/'+code).set({
+  await db.ref('support_agents/'+username).set({
     name:name,
+    username:username,
     code:code,
+    codeUsed:false,
     createdAt:Date.now(),
-    used:false,
+    codeGenCount:1,
     totalMessages:0,
-    totalTime:0
+    totalTime:0,
+    totalEdits:0,
+    totalDeletes:0
   });
   document.getElementById('sup-agent-name').value='';
+  document.getElementById('sup-agent-username').value='';
   loadSupCodes();
-  showToast('Code: '+code);
 }
 
 async function loadSupCodes(){
@@ -644,21 +660,55 @@ async function loadSupCodes(){
     const mins=Math.round((a.totalTime||0)/60000);
     const edits=a.totalEdits||0;
     const gens=a.codeGenCount||1;
-    return '<div class="ud-card" style="margin-bottom:8px;padding:14px;"><div class="ud-row"><span>Name</span><span>'+esc(a.name)+'</span></div><div class="ud-row"><span>Code</span><span style="font-family:monospace;letter-spacing:2px;">'+code+'</span><button class="ud-edit-btn" onclick="regenCode(\''+code+'\')"><i class="fas fa-rotate"></i></button></div><div class="ud-row"><span>Statistics</span><button class="ud-edit-btn" onclick="showAgentStats(\''+code+'\')"><i class="fas fa-question"></i></button></div></div>';
+    const codeStyle=a.codeUsed?'font-family:monospace;letter-spacing:2px;text-decoration:line-through;opacity:.5;':'font-family:monospace;letter-spacing:2px;';
+    return '<div class="ud-card" style="margin-bottom:8px;padding:14px;"><div class="ud-row"><span>Name</span><span>'+esc(a.name)+'</span></div><div class="ud-row"><span>Username</span><span>'+esc(a.username||code)+'</span></div><div class="ud-row"><span>Code</span><span style="'+codeStyle+'">'+esc(a.code||'—')+'</span><button class="ud-edit-btn" onclick="regenCode(\''+code+'\')"><i class="fas fa-rotate"></i></button></div><div class="ud-row"><span>Statistics</span><button class="ud-edit-btn" onclick="showAgentStats(\''+code+'\')"><i class="fas fa-question"></i></button></div></div>';
   }).join('');
 }
 
-async function showAgentStats(code){
-  const snap=await db.ref('support_agents/'+code).get();
+function fmtMins(ms){
+  const mins=Math.round((ms||0)/60000);
+  if(mins<60)return mins+' min';
+  const h=Math.floor(mins/60),m=mins%60;
+  return h+'h '+m+'m';
+}
+async function showAgentStats(username){
+  const snap=await db.ref('support_agents/'+username).get();
   if(!snap.exists()){showToast('Agent not found.','danger');return;}
   const a=snap.val();
   const msgs=a.totalMessages||0;
-  const mins=Math.round((a.totalTime||0)/60000);
   const edits=a.totalEdits||0;
+  const dels=a.totalDeletes||0;
   const gens=a.codeGenCount||1;
-  const created=a.createdAt?new Date(a.createdAt).toLocaleDateString():'—';
+  const totalMs=a.totalTime||0;
+  const today=new Date().toDateString();
+  const daily=a.dailyTime&&a.dailyTime.date===today?a.dailyTime.ms:0;
+  const created=a.createdAt?new Date(a.createdAt):new Date();
+  const dateStr=String(created.getDate()).padStart(2,'0')+'.'+String(created.getMonth()+1).padStart(2,'0')+'.'+created.getFullYear();
+  // Get unanswered count from support_chats where takenBy===username and last.from==='user'
+  const chatsSnap=await db.ref('support_chats').get();
+  let unanswered=0;
+  if(chatsSnap.exists()){
+    const chats=chatsSnap.val();
+    for(const k in chats){
+      const c=chats[k];
+      if(c.takenBy===username&&c.lastMsg&&c.lastMsg.from==='user')unanswered++;
+    }
+  }
   const modal=document.getElementById('lock-modal-bg');
-  document.querySelector('.lock-modal').innerHTML='<div class="lock-modal-title">'+esc(a.name)+'</div><div class="ud-card" style="padding:14px;"><div class="ud-row"><span>Added</span><span>'+created+'</span></div><div class="ud-row"><span>Codes generated</span><span>'+gens+'</span></div><div class="ud-row"><span>Messages answered</span><span>'+msgs+'</span></div><div class="ud-row"><span>Messages edited</span><span>'+edits+'</span></div><div class="ud-row"><span>Time in support</span><span>'+mins+' min</span></div></div><div class="lock-modal-btns"><button class="lock-modal-btn cancel" onclick="closeLockModal()">Close</button></div>';
+  document.querySelector('.lock-modal').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <button class="ud-edit-btn" onclick="closeLockModal()" style="width:32px;height:32px;"><i class="fas fa-times"></i></button>
+      <div style="font-size:12px;color:var(--dim);">${dateStr}</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stats-cell"><div class="stats-cell-lbl">Generated codes</div><div class="stats-cell-val">${gens}</div></div>
+      <div class="stats-cell"><div class="stats-cell-lbl">Unanswered</div><div class="stats-cell-val">${unanswered}</div></div>
+      <div class="stats-cell"><div class="stats-cell-lbl">Messages edited</div><div class="stats-cell-val">${edits}</div></div>
+      <div class="stats-cell"><div class="stats-cell-lbl">Messages deleted</div><div class="stats-cell-val">${dels}</div></div>
+      <div class="stats-cell"><div class="stats-cell-lbl">Time today</div><div class="stats-cell-val">${fmtMins(daily)}</div></div>
+      <div class="stats-cell"><div class="stats-cell-lbl">Time total</div><div class="stats-cell-val">${fmtMins(totalMs)}</div></div>
+    </div>
+  `;
   modal.classList.add('on');
 }
 
@@ -668,21 +718,20 @@ async function checkSupLockStatus(){
   updateSupLockUI(snap.exists()?snap.val():false);
 }
 
-async function regenCode(oldCode){
-  const snap=await db.ref('support_agents/'+oldCode).get();
+async function regenCode(username){
+  const snap=await db.ref('support_agents/'+username).get();
   if(!snap.exists()){showToast('Agent not found.','danger');return;}
   const agent=snap.val();
   let newCode='';
   for(let i=0;i<8;i++)newCode+=String.fromCharCode(65+Math.floor(Math.random()*26));
   newCode+=Math.floor(1000+Math.random()*9000);
   const gens=(agent.codeGenCount||1)+1;
-  agent.code=newCode;
-  agent.codeGenCount=gens;
-  agent.used=false;
-  await db.ref('support_agents/'+oldCode).remove();
-  await db.ref('support_agents/'+newCode).set(agent);
+  await db.ref('support_agents/'+username).update({
+    code:newCode,
+    codeUsed:false,
+    codeGenCount:gens
+  });
   loadSupCodes();
-  showToast('New code: '+newCode);
 }
 
 let _tt=null;
