@@ -81,8 +81,6 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
 .user-em{font-size:10px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 
 .ud-card{background:var(--card-bg);border:1.5px solid var(--silver);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:8px;}
-.ud-name{font-size:18px;font-weight:800;color:#fff;}
-.ud-email{font-size:11px;color:var(--dim);margin-bottom:4px;}
 .ud-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#fff;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);}
 .ud-row:last-child{border-bottom:none;}
 .ud-row span:first-child{color:var(--dim);font-weight:500;}
@@ -96,8 +94,6 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
 
 .wd-card{background:var(--card-bg);border:1px solid rgba(192,200,216,.25);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;}
 .wd-card-top{display:flex;align-items:center;gap:10px;}
-.wd-card-ico{width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;}
-.wd-card-ico img{width:100%;height:100%;object-fit:cover;}
 .wd-card-amt{font-size:14px;font-weight:800;color:#fff;}
 .wd-card-eur{font-size:11px;color:var(--dim);font-weight:500;margin-left:4px;}
 .wd-card-addr{font-size:10px;color:var(--dim);font-family:monospace;word-break:break-all;line-height:1.4;}
@@ -123,7 +119,6 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
 .edit-btn.gold{border-color:var(--silver);color:var(--silver);}
 .edit-btn.danger{border-color:#ff4d4d;color:#ff4d4d;}
 .edit-btn.danger:hover{background:rgba(255,77,77,.08);}
-.edit-select{height:38px;padding:0 12px;background:#000;border:1.5px solid rgba(192,200,216,.35);border-radius:8px;color:#fff;font-size:12px;outline:none;cursor:pointer;}
 
 .lock-modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:24px;}
 .lock-modal-bg.on{display:flex;}
@@ -219,7 +214,6 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
   </div>
 </div>
 
-
 <div class="section" id="sec-support-admin">
   <div class="sec-hdr"><button class="sec-back" onclick="closeSection()"><i class="fas fa-arrow-left"></i></button><div class="sec-title">Support</div></div>
   <div class="sec-body">
@@ -239,7 +233,6 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
     <div class="edit-block">
       <div class="edit-title">Add Support Agent</div>
       <div class="edit-row">
-        <input class="edit-in" id="sup-agent-name" placeholder="Agent name">
         <input class="edit-in" id="sup-agent-username" placeholder="Username">
       </div>
       <div class="edit-row">
@@ -249,7 +242,6 @@ button,select{touch-action:manipulation;-webkit-user-select:none;user-select:non
     <div id="sup-codes-list"></div>
   </div>
 </div>
-
 
 <div class="lock-modal-bg" id="lock-modal-bg">
   <div class="lock-modal">
@@ -286,12 +278,6 @@ function adminLogin(){
   loadAll();
 }
 
-function adminLogout(){
-  document.getElementById('admin').classList.remove('on');
-  document.getElementById('gate').style.display='flex';
-  document.getElementById('adm-pw').value='';
-  closeSection();
-}
 async function loadAll(){
   try{
     const [uS,dS,wS]=await Promise.all([
@@ -323,9 +309,7 @@ function renderInfo(){
 
 function fmt(n){return(parseFloat(n)||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtCrypto(n){const v=parseFloat(n)||0;if(v<=0)return'0';if(v<0.0001)return v.toExponential(2);if(v<1)return v.toFixed(6);if(v<1000)return v.toFixed(2);return Math.round(v).toLocaleString('en');}
-function fmtDate(ts){const d=new Date(ts||0);const p=n=>String(n).padStart(2,'0');return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function eKey(email){return String(email||'').toLowerCase().replace(/[^a-z0-9]/g,'_');}
 function toggleInfo(){document.getElementById('info-panel').classList.toggle('on');document.getElementById('info-toggle').classList.toggle('open');}
 function openSection(name){document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));const sec=document.getElementById('sec-'+name);if(sec)sec.classList.add('on');if(name==='users')filterUsers();if(name==='withdrawals')renderWd();if(name==='lock')onLockSearch();if(name==='support-admin')checkSupLockStatus();}
 function closeSection(){document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));}
@@ -403,85 +387,6 @@ async function editField(field,label){
     allUsers[currentDetailKey]=currentDetailUser;
     showDetail(currentDetailKey);
     showToast(label+' updated.');
-  }catch(e){showToast('Failed.','danger');}
-}
-
-async function editBalance(op){
-  if(!currentDetailKey||!currentDetailUser)return;
-  const amt=parseFloat(document.getElementById('ed-amt').value)||0;
-  if(amt<0){showToast('Invalid amount.','danger');return;}
-  const old=parseFloat(currentDetailUser.balance)||0;
-  let nb=old;
-  if(op==='add')nb=old+amt;else if(op==='sub')nb=Math.max(0,old-amt);else if(op==='set')nb=amt;
-  try{
-    await db.ref('casino_users/'+currentDetailKey+'/balance').set(nb);
-    currentDetailUser.balance=nb;
-    allUsers[currentDetailKey]=currentDetailUser;
-    document.getElementById('ed-amt').value='';
-    showDetail(currentDetailKey);
-    renderInfo();
-    showToast('Balance updated.');
-  }catch(e){showToast('Update failed.','danger');}
-}
-
-async function editCryptoBalance(){
-  if(!currentDetailKey||!currentDetailUser)return;
-  const coin=document.getElementById('ed-coin').value;
-  const amt=parseFloat(document.getElementById('ed-coin-amt').value);
-  if(isNaN(amt)||amt<0){showToast('Invalid amount.','danger');return;}
-  const cb=currentDetailUser.cryptoBalances||{};
-  cb[coin]=amt;
-  try{
-    await db.ref('casino_users/'+currentDetailKey+'/cryptoBalances').set(cb);
-    currentDetailUser.cryptoBalances=cb;
-    allUsers[currentDetailKey]=currentDetailUser;
-    document.getElementById('ed-coin-amt').value='';
-    showDetail(currentDetailKey);
-    showToast(coin.toUpperCase()+' updated.');
-  }catch(e){showToast('Failed.','danger');}
-}
-
-async function resetUserPin(){
-  if(!currentDetailKey)return;
-  if(!confirm('Reset PIN for this user?'))return;
-  try{
-    await db.ref('casino_users/'+currentDetailKey+'/pinHash').remove();
-    await db.ref('casino_users/'+currentDetailKey+'/pinPlain').remove();
-    delete currentDetailUser.pinHash;
-    delete currentDetailUser.pinPlain;
-    allUsers[currentDetailKey]=currentDetailUser;
-    showDetail(currentDetailKey);
-    showToast('PIN reset.');
-  }catch(e){showToast('Failed.','danger');}
-}
-
-async function resetUserStats(){
-  if(!currentDetailKey)return;
-  if(!confirm('Reset RTP paid to 0?'))return;
-  try{
-    await db.ref('casino_users/'+currentDetailKey+'/paidWinTotal').set(0);
-    currentDetailUser.paidWinTotal=0;
-    allUsers[currentDetailKey]=currentDetailUser;
-    showDetail(currentDetailKey);
-    showToast('RTP reset.');
-  }catch(e){showToast('Failed.','danger');}
-}
-
-async function rejectWithdrawal(id){
-  const w=allWdRequests[id];
-  if(!w)return;
-  if(!confirm('Reject withdrawal of '+fmtCrypto(w.amount)+' '+w.ticker+'? Funds will NOT be refunded.'))return;
-  try{
-    const now=Date.now();
-    await db.ref('withdrawal_requests/'+id+'/status').set('rejected');
-    await db.ref('withdrawal_requests/'+id+'/rejectedAt').set(now);
-    if(w.userKey){
-      await db.ref('casino_users/'+w.userKey+'/withdrawals/'+id+'/status').set('rejected');
-      await db.ref('casino_users/'+w.userKey+'/withdrawals/'+id+'/rejectedAt').set(now);
-    }
-    delete allWdRequests[id];
-    renderWd();
-    showToast('Withdrawal rejected.');
   }catch(e){showToast('Failed.','danger');}
 }
 
@@ -594,7 +499,6 @@ async function addUserDeposit(){
   }catch(e){showToast('Failed.','danger');}
 }
 
-
 async function toggleSupportLock(){
   const snap=await db.ref('support_config/locked').get();
   const isLocked=snap.exists()?snap.val():false;
@@ -624,9 +528,7 @@ function openSupUserMgmt(){
 }
 
 async function generateSupCode(){
-  const name=(document.getElementById('sup-agent-name').value||'').trim();
   const username=(document.getElementById('sup-agent-username').value||'').trim();
-  if(!name){showToast('Enter agent name.','danger');return;}
   if(!username){showToast('Enter username.','danger');return;}
   const exists=await db.ref('support_agents/'+username).get();
   if(exists.exists()){showToast('Username already exists.','danger');return;}
@@ -634,7 +536,6 @@ async function generateSupCode(){
   for(let i=0;i<8;i++)code+=String.fromCharCode(65+Math.floor(Math.random()*26));
   code+=Math.floor(1000+Math.random()*9000);
   await db.ref('support_agents/'+username).set({
-    name:name,
     username:username,
     code:code,
     codeUsed:false,
@@ -645,7 +546,6 @@ async function generateSupCode(){
     totalEdits:0,
     totalDeletes:0
   });
-  document.getElementById('sup-agent-name').value='';
   document.getElementById('sup-agent-username').value='';
   loadSupCodes();
 }
@@ -661,7 +561,7 @@ async function loadSupCodes(){
     const edits=a.totalEdits||0;
     const gens=a.codeGenCount||1;
     const codeStyle=a.codeUsed?'font-family:monospace;letter-spacing:2px;text-decoration:line-through;opacity:.5;':'font-family:monospace;letter-spacing:2px;';
-    return '<div class="ud-card" style="margin-bottom:8px;padding:14px;"><div class="ud-row"><span>Name</span><span>'+esc(a.name)+'</span></div><div class="ud-row"><span>Username</span><span>'+esc(a.username||code)+'</span></div><div class="ud-row"><span>Code</span><span style="'+codeStyle+'">'+esc(a.code||'—')+'</span><button class="ud-edit-btn" onclick="regenCode(\''+code+'\')"><i class="fas fa-rotate"></i></button></div><div class="ud-row"><span>Statistics</span><button class="ud-edit-btn" onclick="showAgentStats(\''+code+'\')"><i class="fas fa-question"></i></button></div></div>';
+    return '<div class="ud-card" style="margin-bottom:8px;padding:14px;"><div class="ud-row"><span>Username</span><span>'+esc(a.username||code)+'</span></div><div class="ud-row"><span>Code</span><span style="'+codeStyle+'">'+esc(a.code||'—')+'</span><button class="ud-edit-btn" onclick="regenCode(\''+code+'\')"><i class="fas fa-rotate"></i></button></div><div class="ud-row"><span>Statistics</span><button class="ud-edit-btn" onclick="showAgentStats(\''+code+'\')"><i class="fas fa-question"></i></button></div></div>';
   }).join('');
 }
 
@@ -684,7 +584,6 @@ async function showAgentStats(username){
   const daily=a.dailyTime&&a.dailyTime.date===today?a.dailyTime.ms:0;
   const created=a.createdAt?new Date(a.createdAt):new Date();
   const dateStr=String(created.getDate()).padStart(2,'0')+'.'+String(created.getMonth()+1).padStart(2,'0')+'.'+created.getFullYear();
-  // Get unanswered count from support_chats where takenBy===username and last.from==='user'
   const chatsSnap=await db.ref('support_chats').get();
   let unanswered=0;
   if(chatsSnap.exists()){
@@ -711,7 +610,6 @@ async function showAgentStats(username){
   `;
   modal.classList.add('on');
 }
-
 
 async function checkSupLockStatus(){
   const snap=await db.ref('support_config/locked').get();
