@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>CryptoCasino — Admin</title>
+<meta name="theme-color" content="#000000">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root{--silver:#C0C8D8;--silver-dim:#7a8296;--border:rgba(255,255,255,.10);--border-s:rgba(192,200,216,.5);--dim:rgba(255,255,255,.5);--r:10px;--card-bg:radial-gradient(ellipse 110% 75% at 0% 0%,#0f2547 0%,transparent 55%),radial-gradient(ellipse 110% 75% at 100% 100%,#0f2547 0%,transparent 55%),#000;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{background:#000;font-family:'Inter',sans-serif;color:#fff;min-height:100vh;}
+button,select,input{font-family:'Inter',sans-serif;}
+button,select{touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+
+#gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px;}
+.gate-title{font-size:22px;font-weight:900;letter-spacing:3px;color:#fff;text-align:center;}
+.gate-title .gold{color:#FFD700;}
+.gate-sub{font-size:11px;color:var(--silver-dim);letter-spacing:3px;margin-bottom:16px;font-weight:600;}
+.gate-card{background:var(--card-bg);border:1.5px solid var(--silver);border-radius:14px;padding:26px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px;}
+.gate-lbl{font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.pw-wrap{position:relative;}
+.pw-in{width:100%;height:46px;padding:0 44px 0 14px;background:#000;border:1.5px solid var(--silver);border-radius:var(--r);color:#fff;font-size:14px;outline:none;transition:.2s;}
+.pw-in:focus{border-color:#fff;}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--dim);cursor:pointer;font-size:14px;}
+.pw-eye:hover{color:#fff;}
+.gate-err{font-size:12px;color:#ff4d4d;font-weight:600;text-align:center;min-height:16px;}
+.gate-btn{width:100%;height:46px;border:1.5px solid var(--silver);border-radius:var(--r);background:transparent;color:#fff;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:.15s;}
+.gate-btn:hover{background:rgba(255,255,255,.05);}
+.gate-btn:active{transform:scale(.98);}
+
+#admin{display:none;min-height:100vh;flex-direction:column;}
+#admin.on{display:flex;}
+.a-body{padding:16px 14px 40px;max-width:800px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:14px;}
+
+.info-btn{width:100%;height:48px;border:1.5px solid var(--silver);border-radius:var(--r) var(--r) var(--r) var(--r);background:var(--card-bg);color:#fff;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:space-between;padding:0 20px;}
+.info-btn:hover{border-color:#fff;}
+.info-btn .chev{transition:transform .3s;font-size:11px;color:var(--silver);}
+.info-btn.open{border-radius:var(--r) var(--r) 0 0;border-bottom-color:transparent;}
+.info-btn.open .chev{transform:rotate(180deg);}
+.info-panel{display:none;background:var(--card-bg);border:1.5px solid var(--silver);border-top:none;border-radius:0 0 var(--r) var(--r);padding:14px;margin-top:-14px;}
+.info-panel.on{display:block;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.info-cell{background:rgba(0,0,0,.4);border:1px solid rgba(192,200,216,.25);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;}
+.info-cell-lbl{font-size:9px;font-weight:600;color:var(--dim);letter-spacing:.3px;}
+.info-cell-val{font-size:16px;font-weight:800;color:#fff;}
+
+.main-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.main-btn{aspect-ratio:1.3/1;border:1.5px solid var(--silver);border-radius:var(--r);background:var(--card-bg);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:.15s;padding:16px;}
+.main-btn:hover{border-color:#fff;}
+.main-btn:active{transform:scale(.99);}
+.main-btn i{font-size:24px;color:var(--silver);}
+.main-btn span{font-size:12px;font-weight:700;letter-spacing:1px;}
+
+.field-in{width:100%;height:44px;padding:0 14px;background:#000;border:1.5px solid rgba(192,200,216,.35);border-radius:8px;color:#fff;font-size:13px;outline:none;transition:.2s;}
+.field-in:focus{border-color:var(--silver);}
+.field-in::placeholder{color:var(--dim);}
+
+.section{display:none;position:fixed;inset:0;z-index:100;background:#000;flex-direction:column;overflow-y:auto;}
+.section.on{display:flex;}
+.sec-hdr{position:sticky;top:0;background:rgba(0,0,0,.96);backdrop-filter:blur(12px);z-index:5;padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.sec-back{width:36px;height:36px;border-radius:8px;border:1.5px solid rgba(192,200,216,.35);background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:.15s;}
+.sec-back:hover{border-color:var(--silver);}
+.sec-title{font-size:14px;font-weight:700;letter-spacing:1px;color:#fff;}
+.sec-body{flex:1;padding:16px 14px 40px;max-width:800px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:12px;}
+
+.search-row{position:relative;display:flex;align-items:center;}
+.search-icon{position:absolute;left:14px;color:var(--dim);font-size:13px;pointer-events:none;}
+.search-in{padding-left:36px !important;}
+.filter-bar{display:flex;gap:8px;}
+.filter-btn{flex:1;height:38px;border:1.5px solid var(--silver);border-radius:8px;background:transparent;color:var(--dim);font-size:11px;font-weight:600;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:4px;}
+.filter-btn.on{background:rgba(192,200,216,.1);color:#fff;}
+.filter-btn:hover{color:#fff;}
+.filter-cnt{font-size:10px;opacity:.6;font-weight:500;}
+
+.user-row{background:var(--card-bg);border:1.5px solid var(--silver);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:3px;cursor:pointer;transition:.15s;margin-bottom:2px;}
+.user-row:hover{border-color:var(--silver);}
+.user-nm{font-size:13px;font-weight:700;color:#fff;}
+.user-em{font-size:10px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.ud-card{background:var(--card-bg);border:1.5px solid var(--silver);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:8px;}
+.ud-name{font-size:18px;font-weight:800;color:#fff;}
+.ud-email{font-size:11px;color:var(--dim);margin-bottom:4px;}
+.ud-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#fff;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.ud-row:last-child{border-bottom:none;}
+.ud-row span:first-child{color:var(--dim);font-weight:500;}
+.ud-row span:last-child{font-weight:700;}
+.ud-edit-btn{width:28px;height:28px;border-radius:6px;border:1px solid rgba(192,200,216,.3);background:transparent;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px;transition:.12s;flex-shrink:0;margin-left:8px;}
+.ud-edit-btn:hover{border-color:var(--silver);color:#fff;}
+.ud-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ud-stat{background:rgba(0,0,0,.4);border:1px solid rgba(192,200,216,.2);border-radius:8px;padding:10px 12px;}
+.ud-stat-lbl{font-size:9px;color:var(--dim);letter-spacing:.3px;font-weight:600;}
+.ud-stat-val{font-size:14px;font-weight:800;color:#fff;margin-top:3px;}
+
+.wd-card{background:var(--card-bg);border:1px solid rgba(192,200,216,.25);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:8px;}
+.wd-card-top{display:flex;align-items:center;gap:10px;}
+.wd-card-ico{width:32px;height:32px;border-radius:50%;overflow:hidden;flex-shrink:0;}
+.wd-card-ico img{width:100%;height:100%;object-fit:cover;}
+.wd-card-amt{font-size:14px;font-weight:800;color:#fff;}
+.wd-card-eur{font-size:11px;color:var(--dim);font-weight:500;margin-left:4px;}
+.wd-card-addr{font-size:10px;color:var(--dim);font-family:monospace;word-break:break-all;line-height:1.4;}
+.wd-card-user{font-size:10px;color:var(--dim);}
+.wd-approve-btn{width:100%;height:36px;border:1.5px solid var(--silver);border-radius:8px;background:transparent;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:.15s;}
+.wd-approve-btn:hover{background:rgba(255,255,255,.05);}
+
+.lock-card{background:var(--card-bg);border:1px solid rgba(192,200,216,.25);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;}
+.lock-btns{display:flex;gap:8px;}
+.lock-btn{flex:1;height:38px;border-radius:8px;border:1.5px solid;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:.15s;background:transparent;}
+.lock-btn.danger{border-color:#ff4d4d;color:#ff4d4d;}
+.lock-btn.danger:hover{background:rgba(255,77,77,.08);}
+.lock-btn.unlock{border-color:var(--silver);color:var(--silver);}
+.lock-btn.unlock:hover{background:rgba(192,200,216,.08);}
+
+.edit-block{background:rgba(0,0,0,.3);border:1px solid rgba(192,200,216,.2);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.edit-title{font-size:10px;font-weight:600;color:var(--dim);letter-spacing:.3px;}
+.edit-row{display:flex;gap:8px;}
+.edit-in{flex:1;height:38px;padding:0 12px;background:#000;border:1.5px solid rgba(192,200,216,.35);border-radius:8px;color:#fff;font-size:12px;outline:none;transition:.2s;}
+.edit-in:focus{border-color:var(--silver);}
+.edit-btn{height:38px;padding:0 14px;border:1.5px solid rgba(192,200,216,.35);border-radius:8px;background:transparent;color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:.15s;white-space:nowrap;}
+.edit-btn:hover{border-color:var(--silver);}
+.edit-btn.gold{border-color:var(--silver);color:var(--silver);}
+.edit-btn.danger{border-color:#ff4d4d;color:#ff4d4d;}
+.edit-btn.danger:hover{background:rgba(255,77,77,.08);}
+.edit-select{height:38px;padding:0 12px;background:#000;border:1.5px solid rgba(192,200,216,.35);border-radius:8px;color:#fff;font-size:12px;outline:none;cursor:pointer;}
+
+.lock-modal-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:24px;}
+.lock-modal-bg.on{display:flex;}
+.lock-modal{background:var(--card-bg);border:1.5px solid var(--silver);border-radius:14px;padding:24px;width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;}
+.lock-modal-title{font-size:14px;font-weight:800;color:#fff;}
+.lock-modal-ta{width:100%;height:80px;padding:12px;background:#000;border:1.5px solid rgba(192,200,216,.35);border-radius:8px;color:#fff;font-size:13px;outline:none;resize:none;font-family:'Inter',sans-serif;}
+.lock-modal-ta:focus{border-color:var(--silver);}
+.lock-modal-btns{display:flex;gap:8px;}
+.lock-modal-btn{flex:1;height:40px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;border:1.5px solid;}
+.lock-modal-btn.confirm{border-color:#ff4d4d;color:#ff4d4d;background:transparent;}
+.lock-modal-btn.confirm:hover{background:rgba(255,77,77,.08);}
+.lock-modal-btn.cancel{border-color:var(--silver);color:var(--silver);background:transparent;}
+.lock-modal-btn.cancel:hover{background:rgba(192,200,216,.08);}
+
+.empty-msg{text-align:center;padding:28px 16px;color:var(--dim);font-size:12px;}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--card-bg);border:1.5px solid var(--silver);color:#fff;padding:10px 18px;border-radius:var(--r);font-size:12px;font-weight:700;opacity:0;transition:.25s;z-index:9999;pointer-events:none;white-space:nowrap;max-width:88vw;text-align:center;}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.danger{border-color:#ff4d4d;color:#ff4d4d;}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-title"><span class="gold">⬡</span> CRYPTOCASINO</div>
+  <div class="gate-sub">ADMIN PANEL</div>
+  <div class="gate-card">
+    <div><div class="gate-lbl">Admin Password</div>
+      <div class="pw-wrap">
+        <input class="pw-in" type="password" id="adm-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')adminLogin()">
+        <span class="pw-eye" onclick="togglePw()"><i class="fas fa-eye" id="pw-icon"></i></span>
+      </div>
+    </div>
+    <div class="gate-err" id="gate-err"></div>
+    <button class="gate-btn" onclick="adminLogin()">ENTER</button>
+  </div>
+</div>
+
+<div id="admin">
+  <div class="a-body">
+    <button class="info-btn" id="info-toggle" onclick="toggleInfo()">
+      <span>Admin Info</span>
+      <i class="fas fa-chevron-down chev"></i>
+    </button>
+    <div class="info-panel" id="info-panel">
+      <div class="info-grid">
+        <div class="info-cell"><div class="info-cell-lbl">Total Withdrawals</div><div class="info-cell-val" id="i-wd">0.00 €</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Total Deposits</div><div class="info-cell-val" id="i-dep">0.00 €</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Deposit Users</div><div class="info-cell-val" id="i-dep-users">0</div></div>
+        <div class="info-cell"><div class="info-cell-lbl">Registered Users</div><div class="info-cell-val" id="i-users">0</div></div>
+      </div>
+    </div>
+    <div class="main-btns">
+      <button class="main-btn" onclick="openSection('users')"><i class="fas fa-users"></i><span>Users</span></button>
+      <button class="main-btn" onclick="openSection('withdrawals')"><i class="fas fa-money-bill-transfer"></i><span>Withdrawals</span></button>
+      <button class="main-btn" onclick="showToast('KYC coming soon.')"><i class="fas fa-id-card"></i><span>KYC</span></button>
+      <button class="main-btn" onclick="openSection('lock')"><i class="fas fa-lock"></i><span>Lock Account</span></button>
+      <button class="main-btn" onclick="openSection('support-admin')"><i class="fas fa-headset"></i><span>Support</span></button>
+    </div>
+
+  </div>
+</div>
+
+<div class="section" id="sec-users">
+  <div class="sec-hdr"><button class="sec-back" onclick="closeSection()"><i class="fas fa-arrow-left"></i></button><div class="sec-title">Users</div></div>
+  <div class="sec-body" id="sec-users-body">
+    <div class="search-row"><i class="fas fa-search search-icon"></i><input class="field-in search-in" id="user-search" placeholder="" oninput="filterUsers()"></div>
+    <div class="filter-bar" id="user-filter-bar"></div>
+    <div id="users-list"></div>
+  </div>
+</div>
+
+<div class="section" id="sec-user-detail">
+  <div class="sec-hdr"><button class="sec-back" onclick="openSection('users')"><i class="fas fa-arrow-left"></i></button><div class="sec-title">User</div></div>
+  <div class="sec-body" id="sec-user-detail-body"></div>
+</div>
+
+<div class="section" id="sec-withdrawals">
+  <div class="sec-hdr"><button class="sec-back" onclick="closeSection()"><i class="fas fa-arrow-left"></i></button><div class="sec-title">Withdrawals</div></div>
+  <div class="sec-body" id="sec-wd-body"></div>
+</div>
+
+<div class="section" id="sec-lock">
+  <div class="sec-hdr"><button class="sec-back" onclick="closeSection()"><i class="fas fa-arrow-left"></i></button><div class="sec-title">Lock Account</div></div>
+  <div class="sec-body" id="sec-lock-body">
+    <div class="search-row"><i class="fas fa-search search-icon"></i><input class="field-in search-in" id="lock-search" placeholder="" oninput="onLockSearch()"></div>
+    <div class="filter-bar" id="lock-filter-bar"></div>
+    <div id="lock-results"></div>
+  </div>
+</div>
+
+
+<div class="section" id="sec-support-admin">
+  <div class="sec-hdr"><button class="sec-back" onclick="closeSection()"><i class="fas fa-arrow-left"></i></button><div class="sec-title">Support</div></div>
+  <div class="sec-body">
+    <button class="main-btn" onclick="toggleSupportLock()" id="sup-lock-btn" style="aspect-ratio:auto;height:52px;flex-direction:row;gap:12px;border-color:#16a34a;">
+      <i class="fas fa-lock-open" id="sup-lock-icon" style="color:#16a34a;"></i><span id="sup-lock-text" style="color:#16a34a;">Support Open</span>
+    </button>
+    <button class="main-btn" onclick="openSupUserMgmt()" style="aspect-ratio:auto;height:52px;flex-direction:row;gap:12px;">
+      <i class="fas fa-user-plus"></i><span>Support Users</span>
+    </button>
+
+  </div>
+</div>
+
+<div class="section" id="sec-sup-users">
+  <div class="sec-hdr"><button class="sec-back" onclick="openSection('support-admin')"><i class="fas fa-arrow-left"></i></button><div class="sec-title">Support Users</div></div>
+  <div class="sec-body" id="sec-sup-users-body">
+    <div class="edit-block">
+      <div class="edit-title">Add Support Agent</div>
+      <div class="edit-row">
+        <input class="edit-in" id="sup-agent-name" placeholder="Agent name">
+        <button class="edit-btn gold" onclick="generateSupCode()">Generate</button>
+      </div>
+    </div>
+    <div id="sup-codes-list"></div>
+  </div>
+</div>
+
+
+<div class="lock-modal-bg" id="lock-modal-bg">
+  <div class="lock-modal">
+    <div class="lock-modal-title">Lock Account</div>
+    <textarea class="lock-modal-ta" id="lock-msg" placeholder="Message to show the user..."></textarea>
+    <div class="lock-modal-btns">
+      <button class="lock-modal-btn cancel" onclick="closeLockModal()">Cancel</button>
+      <button class="lock-modal-btn confirm" onclick="confirmLock()">Lock</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyCKD4r6pVA4QRQxOt9zsJ2icBghkPK3_qU",authDomain:"solar-power-ono.firebaseapp.com",databaseURL:"https://solar-power-ono-default-rtdb.europe-west1.firebasedatabase.app",projectId:"solar-power-ono",storageBucket:"solar-power-ono.firebasestorage.app",messagingSenderId:"263040168510",appId:"1:263040168510:web:46517e20c66bacbfabd76f"});
+const db=firebase.database();
+const ADMIN_PW='admin2024';
+let allUsers={},allDepRequests={},allWdRequests={};
+let currentDetailUser=null,currentDetailKey=null;
+let lockTargetKey=null;
+
+function togglePw(){const el=document.getElementById('adm-pw');const ic=document.getElementById('pw-icon');const s=el.type==='password';el.type=s?'text':'password';ic.className=s?'fas fa-eye-slash':'fas fa-eye';}
+function adminLogin(){
+  const pw=(document.getElementById('adm-pw').value||'').trim();
+  const err=document.getElementById('gate-err');
+  err.textContent='';
+  if(!pw){err.textContent='Enter admin password.';return;}
+  if(pw!==ADMIN_PW){err.textContent='Incorrect password.';return;}
+  document.getElementById('gate').style.display='none';
+  document.getElementById('admin').classList.add('on');
+  loadAll();
+}
+
+function adminLogout(){
+  document.getElementById('admin').classList.remove('on');
+  document.getElementById('gate').style.display='flex';
+  document.getElementById('adm-pw').value='';
+  closeSection();
+}
+async function loadAll(){
+  try{
+    const [uS,dS,wS]=await Promise.all([
+      db.ref('casino_users').get(),
+      db.ref('deposit_requests').get(),
+      db.ref('withdrawal_requests').get()
+    ]);
+    allUsers=uS.exists()?uS.val():{};
+    allDepRequests=dS.exists()?dS.val():{};
+    allWdRequests=wS.exists()?wS.val():{};
+    renderInfo();
+  }catch(e){
+    showToast('Failed to load data.','danger');
+  }
+}
+
+function renderInfo(){
+  const users=Object.values(allUsers);
+  const deposits=Object.values(allDepRequests);
+  const withdrawals=Object.values(allWdRequests);
+  const totalDep=deposits.filter(d=>d.status==='activated').reduce((s,d)=>s+(parseFloat(d.eurAmount)||0),0);
+  const totalWd=withdrawals.filter(w=>w.status==='approved').reduce((s,w)=>s+(parseFloat(w.eurValue)||0),0);
+  const depUsers=users.filter(u=>(parseFloat(u.depositTotal)||0)>0).length;
+  document.getElementById('i-dep').textContent=fmt(totalDep)+' €';
+  document.getElementById('i-wd').textContent=fmt(totalWd)+' €';
+  document.getElementById('i-dep-users').textContent=depUsers;
+  document.getElementById('i-users').textContent=users.length;
+}
+
+function fmt(n){return(parseFloat(n)||0).toLocaleString('en',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtCrypto(n){const v=parseFloat(n)||0;if(v<=0)return'0';if(v<0.0001)return v.toExponential(2);if(v<1)return v.toFixed(6);if(v<1000)return v.toFixed(2);return Math.round(v).toLocaleString('en');}
+function fmtDate(ts){const d=new Date(ts||0);const p=n=>String(n).padStart(2,'0');return p(d.getDate())+'.'+p(d.getMonth()+1)+'.'+d.getFullYear()+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function eKey(email){return String(email||'').toLowerCase().replace(/[^a-z0-9]/g,'_');}
+function toggleInfo(){document.getElementById('info-panel').classList.toggle('on');document.getElementById('info-toggle').classList.toggle('open');}
+function openSection(name){document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));const sec=document.getElementById('sec-'+name);if(sec)sec.classList.add('on');if(name==='users')filterUsers();if(name==='withdrawals')renderWd();if(name==='lock')onLockSearch();if(name==='support-admin')checkSupLockStatus();}
+function closeSection(){document.querySelectorAll('.section').forEach(s=>s.classList.remove('on'));}
+
+let userFilter='all';
+function filterUsers(){
+  const q=(document.getElementById('user-search')?.value||'').trim().toLowerCase();
+  const entries=Object.entries(allUsers);
+  const all=entries.length;
+  const dep=entries.filter(([k,u])=>(parseFloat(u.depositTotal)||0)>0).length;
+  const noDep=all-dep;
+  const bar=document.getElementById('user-filter-bar');
+  bar.innerHTML=['all','deposited','not-deposited'].map(f=>{
+    const cnt=f==='all'?all:f==='deposited'?dep:noDep;
+    const lbl=f==='all'?'All':f==='deposited'?'Deposited':'Not Deposited';
+    return`<button class="filter-btn${userFilter===f?' on':''}" onclick="userFilter='${f}';filterUsers()">${lbl} <span class="filter-cnt">(${cnt})</span></button>`;
+  }).join('');
+  let filtered=entries;
+  if(q)filtered=filtered.filter(([k,u])=>(u.email||'').toLowerCase().includes(q)||(u.inviteCode||'').includes(q));
+  if(userFilter==='deposited')filtered=filtered.filter(([k,u])=>(parseFloat(u.depositTotal)||0)>0);
+  else if(userFilter==='not-deposited')filtered=filtered.filter(([k,u])=>(parseFloat(u.depositTotal)||0)<=0);
+  const list=document.getElementById('users-list');
+  if(!filtered.length){list.innerHTML='<div class="empty-msg">No users found.</div>';return;}
+  list.innerHTML=filtered.map(([k,u])=>{
+    const nm=esc((u.firstName||'')+' '+(u.lastName||''));
+    const em=esc(u.email||k);
+    return`<div class="user-row" onclick="showDetail('${k}')"><div class="user-nm">${nm}</div><div class="user-em">${em}</div></div>`;
+  }).join('');
+}
+
+function showDetail(key){
+  const u=allUsers[key];if(!u)return;
+  currentDetailKey=key;currentDetailUser=u;
+  const body=document.getElementById('sec-user-detail-body');
+  const nm=esc((u.firstName||'')+' '+(u.lastName||''));
+  const em=esc(u.email||'');
+  const dep=fmt(parseFloat(u.depositTotal)||0);
+  const won=fmt(parseFloat(u.totalWon)||0);
+  const wd=fmt(Object.values(u.withdrawals||{}).filter(w=>w.status==='approved').reduce((s,w)=>s+(parseFloat(w.eurValue)||0),0));
+  const refCount=Object.keys(u.referrals||{}).length;
+  const refEarnings=fmt(parseFloat(u.referralEarnings)||0);
+  const pw=esc(u.passwordPlain||'—');
+  const pin=esc(u.pinPlain||'—');
+  body.innerHTML=`
+    <div class="ud-stat-grid">
+      <div class="ud-stat"><div class="ud-stat-lbl">Total Withdrawn</div><div class="ud-stat-val">${wd} €</div></div>
+      <div class="ud-stat"><div class="ud-stat-lbl">Total Deposited</div><div class="ud-stat-val">${dep} €</div></div>
+      <div class="ud-stat"><div class="ud-stat-lbl">Referral Earnings</div><div class="ud-stat-val">${refEarnings} €</div></div>
+      <div class="ud-stat"><div class="ud-stat-lbl">Invited Users</div><div class="ud-stat-val">${refCount}</div></div>
+    </div>
+    <div class="ud-card">
+      <div class="ud-row"><span>Name</span><span>${nm}</span><button class="ud-edit-btn" onclick="editField('firstName','Name')"><i class="fas fa-pen"></i></button></div>
+      <div class="ud-row"><span>Email</span><span>${em}</span><button class="ud-edit-btn" onclick="editField('email','Email')"><i class="fas fa-pen"></i></button></div>
+      <div class="ud-row"><span>Password</span><span>${pw}</span><button class="ud-edit-btn" onclick="editField('passwordPlain','Password')"><i class="fas fa-pen"></i></button></div>
+      <div class="ud-row"><span>PIN Code</span><span>${pin}</span><button class="ud-edit-btn" onclick="editField('pinPlain','PIN')"><i class="fas fa-pen"></i></button></div>
+    </div>
+    <div class="edit-block">
+      <div class="edit-title">Add Deposit</div>
+      <div class="edit-row">
+        <input class="edit-in" type="number" id="ed-dep" placeholder="Amount in €" step="0.01" min="0">
+        <button class="edit-btn gold" onclick="addUserDeposit()">Activate</button>
+      </div>
+    </div>
+  `;
+  openSection('user-detail');
+}
+
+async function editField(field,label){
+  if(!currentDetailKey)return;
+  const val=prompt('New '+label+':');
+  if(val===null)return;
+  try{
+    await db.ref('casino_users/'+currentDetailKey+'/'+field).set(val);
+    currentDetailUser[field]=val;
+    allUsers[currentDetailKey]=currentDetailUser;
+    showDetail(currentDetailKey);
+    showToast(label+' updated.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+async function editBalance(op){
+  if(!currentDetailKey||!currentDetailUser)return;
+  const amt=parseFloat(document.getElementById('ed-amt').value)||0;
+  if(amt<0){showToast('Invalid amount.','danger');return;}
+  const old=parseFloat(currentDetailUser.balance)||0;
+  let nb=old;
+  if(op==='add')nb=old+amt;else if(op==='sub')nb=Math.max(0,old-amt);else if(op==='set')nb=amt;
+  try{
+    await db.ref('casino_users/'+currentDetailKey+'/balance').set(nb);
+    currentDetailUser.balance=nb;
+    allUsers[currentDetailKey]=currentDetailUser;
+    document.getElementById('ed-amt').value='';
+    showDetail(currentDetailKey);
+    renderInfo();
+    showToast('Balance updated.');
+  }catch(e){showToast('Update failed.','danger');}
+}
+
+async function editCryptoBalance(){
+  if(!currentDetailKey||!currentDetailUser)return;
+  const coin=document.getElementById('ed-coin').value;
+  const amt=parseFloat(document.getElementById('ed-coin-amt').value);
+  if(isNaN(amt)||amt<0){showToast('Invalid amount.','danger');return;}
+  const cb=currentDetailUser.cryptoBalances||{};
+  cb[coin]=amt;
+  try{
+    await db.ref('casino_users/'+currentDetailKey+'/cryptoBalances').set(cb);
+    currentDetailUser.cryptoBalances=cb;
+    allUsers[currentDetailKey]=currentDetailUser;
+    document.getElementById('ed-coin-amt').value='';
+    showDetail(currentDetailKey);
+    showToast(coin.toUpperCase()+' updated.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+async function resetUserPin(){
+  if(!currentDetailKey)return;
+  if(!confirm('Reset PIN for this user?'))return;
+  try{
+    await db.ref('casino_users/'+currentDetailKey+'/pinHash').remove();
+    await db.ref('casino_users/'+currentDetailKey+'/pinPlain').remove();
+    delete currentDetailUser.pinHash;
+    delete currentDetailUser.pinPlain;
+    allUsers[currentDetailKey]=currentDetailUser;
+    showDetail(currentDetailKey);
+    showToast('PIN reset.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+async function resetUserStats(){
+  if(!currentDetailKey)return;
+  if(!confirm('Reset RTP paid to 0?'))return;
+  try{
+    await db.ref('casino_users/'+currentDetailKey+'/paidWinTotal').set(0);
+    currentDetailUser.paidWinTotal=0;
+    allUsers[currentDetailKey]=currentDetailUser;
+    showDetail(currentDetailKey);
+    showToast('RTP reset.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+async function rejectWithdrawal(id){
+  const w=allWdRequests[id];
+  if(!w)return;
+  if(!confirm('Reject withdrawal of '+fmtCrypto(w.amount)+' '+w.ticker+'? Funds will NOT be refunded.'))return;
+  try{
+    const now=Date.now();
+    await db.ref('withdrawal_requests/'+id+'/status').set('rejected');
+    await db.ref('withdrawal_requests/'+id+'/rejectedAt').set(now);
+    if(w.userKey){
+      await db.ref('casino_users/'+w.userKey+'/withdrawals/'+id+'/status').set('rejected');
+      await db.ref('casino_users/'+w.userKey+'/withdrawals/'+id+'/rejectedAt').set(now);
+    }
+    delete allWdRequests[id];
+    renderWd();
+    showToast('Withdrawal rejected.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+let wdFilter='pending';
+function renderWd(){
+  const body=document.getElementById('sec-wd-body');
+  const items=Object.entries(allWdRequests).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  const pending=items.filter(([id,w])=>(w.status||'pending')==='pending');
+  const approved=items.filter(([id,w])=>w.status==='approved');
+  const pSum=pending.reduce((s,[id,w])=>s+(parseFloat(w.eurValue)||0),0);
+  const aSum=approved.reduce((s,[id,w])=>s+(parseFloat(w.eurValue)||0),0);
+  const shown=wdFilter==='pending'?pending:approved;
+  const sum=wdFilter==='pending'?pSum:aSum;
+  let html=`<div class="filter-bar" style="margin-bottom:8px">
+      <button class="filter-btn${wdFilter==='pending'?' on':''}" onclick="wdFilter='pending';renderWd()">Pending <span class="filter-cnt">${fmt(pSum)} €</span></button>
+      <button class="filter-btn${wdFilter==='approved'?' on':''}" onclick="wdFilter='approved';renderWd()">Approved <span class="filter-cnt">${fmt(aSum)} €</span></button>
+    </div>`;
+  if(!shown.length){html+='<div class="empty-msg">No requests.</div>';body.innerHTML=html;return;}
+  html+=shown.map(([id,w])=>{
+    const approveBtn=wdFilter==='pending'?`<button class="wd-approve-btn" onclick="approveWd('${id}')">Approve</button>`:'';
+    return`<div class="wd-card"><div class="wd-card-top"><div class="wd-card-amt">${fmtCrypto(w.amount)} ${esc(w.ticker||'')}<span class="wd-card-eur">≈ ${fmt(parseFloat(w.eurValue)||0)} €</span></div></div><div class="wd-card-user">${esc(w.userEmail||'')}</div><div class="wd-card-addr">${esc(w.address||'')}</div>${approveBtn}</div>`;
+  }).join('');
+  body.innerHTML=html;
+}
+
+async function approveWd(id){
+  const w=allWdRequests[id];if(!w)return;
+  if(!confirm('Approve '+fmtCrypto(w.amount)+' '+w.ticker+'?'))return;
+  try{
+    const now=Date.now();
+    await db.ref('withdrawal_requests/'+id+'/status').set('approved');
+    await db.ref('withdrawal_requests/'+id+'/approvedAt').set(now);
+    if(w.userKey){
+      await db.ref('casino_users/'+w.userKey+'/withdrawals/'+id+'/status').set('approved');
+      await db.ref('casino_users/'+w.userKey+'/withdrawals/'+id+'/approvedAt').set(now);
+    }
+    allWdRequests[id].status='approved';
+    renderWd();
+    renderInfo();
+    showToast('Approved.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+let lockFilter='unlocked';
+function onLockSearch(){
+  const q=(document.getElementById('lock-search')?.value||'').trim().toLowerCase();
+  const entries=Object.entries(allUsers);
+  const unlocked=entries.filter(([k,u])=>!u.locked);
+  const locked=entries.filter(([k,u])=>!!u.locked);
+  const bar=document.getElementById('lock-filter-bar');
+  bar.innerHTML=`<button class="filter-btn${lockFilter==='unlocked'?' on':''}" onclick="lockFilter='unlocked';onLockSearch()">Unlocked <span class="filter-cnt">(${unlocked.length})</span></button><button class="filter-btn${lockFilter==='locked'?' on':''}" onclick="lockFilter='locked';onLockSearch()">Locked <span class="filter-cnt">(${locked.length})</span></button>`;
+  let pool=lockFilter==='unlocked'?unlocked:locked;
+  if(q)pool=pool.filter(([k,u])=>(u.email||'').toLowerCase().includes(q)||(u.inviteCode||'').includes(q));
+  const out=document.getElementById('lock-results');
+  if(!pool.length){out.innerHTML='<div class="empty-msg">No users found.</div>';return;}
+  out.innerHTML=pool.map(([k,u])=>{
+    const nm=esc((u.firstName||'')+' '+(u.lastName||''));
+    const em=esc(u.email||'');
+    const isLocked=!!u.locked;
+    return`<div class="lock-card"><div class="user-nm">${nm}</div><div class="user-em">${em}</div><div class="lock-btns">${isLocked?`<button class="lock-btn unlock" onclick="doUnlock('${k}')">Unlock Account</button>`:`<button class="lock-btn danger" onclick="openLockModal('${k}')">Lock Account</button>`}</div></div>`;
+  }).join('');
+}
+
+function openLockModal(key){lockTargetKey=key;document.getElementById('lock-msg').value='';document.getElementById('lock-modal-bg').classList.add('on');}
+function closeLockModal(){document.getElementById('lock-modal-bg').classList.remove('on');lockTargetKey=null;}
+async function confirmLock(){
+  if(!lockTargetKey)return;
+  const msg=(document.getElementById('lock-msg').value||'').trim()||'Your account has been locked.';
+  try{
+    await db.ref('casino_users/'+lockTargetKey+'/locked').set(true);
+    await db.ref('casino_users/'+lockTargetKey+'/lockMessage').set(msg);
+    allUsers[lockTargetKey].locked=true;
+    allUsers[lockTargetKey].lockMessage=msg;
+    closeLockModal();
+    onLockSearch();
+    showToast('Account locked.');
+  }catch(e){showToast('Failed.','danger');}
+}
+async function doUnlock(key){
+  if(!confirm('Unlock this account?'))return;
+  try{
+    await db.ref('casino_users/'+key+'/locked').set(false);
+    await db.ref('casino_users/'+key+'/lockMessage').remove();
+    allUsers[key].locked=false;
+    delete allUsers[key].lockMessage;
+    onLockSearch();
+    showToast('Account unlocked.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+async function addUserDeposit(){
+  if(!currentDetailKey||!currentDetailUser)return;
+  const amt=parseFloat(document.getElementById('ed-dep').value)||0;
+  if(amt<=0){showToast('Enter a valid amount.','danger');return;}
+  if(!confirm('Add '+fmt(amt)+' € deposit for this user?'))return;
+  try{
+    const oldBal=parseFloat(currentDetailUser.balance)||0;
+    const oldDep=parseFloat(currentDetailUser.depositTotal)||0;
+    const newBal=oldBal+amt;
+    const newDep=oldDep+amt;
+    await db.ref('casino_users/'+currentDetailKey+'/balance').set(newBal);
+    await db.ref('casino_users/'+currentDetailKey+'/depositTotal').set(newDep);
+    currentDetailUser.balance=newBal;
+    currentDetailUser.depositTotal=newDep;
+    allUsers[currentDetailKey]=currentDetailUser;
+    document.getElementById('ed-dep').value='';
+    showDetail(currentDetailKey);
+    renderInfo();
+    showToast('Deposit +'+fmt(amt)+' € activated.');
+  }catch(e){showToast('Failed.','danger');}
+}
+
+
+async function toggleSupportLock(){
+  const snap=await db.ref('support_config/locked').get();
+  const isLocked=snap.exists()?snap.val():false;
+  const newState=!isLocked;
+  await db.ref('support_config/locked').set(newState);
+  updateSupLockUI(newState);
+  showToast(newState?'Support locked.':'Support unlocked.');
+}
+function updateSupLockUI(locked){
+  const btn=document.getElementById('sup-lock-btn');
+  const icon=document.getElementById('sup-lock-icon');
+  const text=document.getElementById('sup-lock-text');
+  if(locked){
+    btn.style.borderColor='#dc2626';
+    icon.className='fas fa-lock';icon.style.color='#dc2626';
+    text.textContent='Support Locked';text.style.color='#dc2626';
+  }else{
+    btn.style.borderColor='#16a34a';
+    icon.className='fas fa-lock-open';icon.style.color='#16a34a';
+    text.textContent='Support Open';text.style.color='#16a34a';
+  }
+}
+
+function openSupUserMgmt(){
+  openSection('sup-users');
+  loadSupCodes();
+}
+
+async function generateSupCode(){
+  const name=(document.getElementById('sup-agent-name').value||'').trim();
+  if(!name){showToast('Enter agent name.','danger');return;}
+  let code='';
+  for(let i=0;i<8;i++)code+=String.fromCharCode(65+Math.floor(Math.random()*26));
+  code+=Math.floor(1000+Math.random()*9000);
+  await db.ref('support_agents/'+code).set({
+    name:name,
+    code:code,
+    createdAt:Date.now(),
+    used:false,
+    totalMessages:0,
+    totalTime:0
+  });
+  document.getElementById('sup-agent-name').value='';
+  loadSupCodes();
+  showToast('Code: '+code);
+}
+
+async function loadSupCodes(){
+  const snap=await db.ref('support_agents').get();
+  const list=document.getElementById('sup-codes-list');
+  if(!snap.exists()){list.innerHTML='<div class="empty-msg">No agents yet.</div>';return;}
+  const agents=snap.val();
+  list.innerHTML=Object.entries(agents).map(([code,a])=>{
+    const msgs=a.totalMessages||0;
+    const mins=Math.round((a.totalTime||0)/60000);
+    const edits=a.totalEdits||0;
+    const gens=a.codeGenCount||1;
+    return '<div class="ud-card" style="margin-bottom:8px;padding:14px;"><div class="ud-row"><span>Name</span><span>'+esc(a.name)+'</span></div><div class="ud-row"><span>Code</span><span style="font-family:monospace;letter-spacing:2px;">'+code+'</span><button class="ud-edit-btn" onclick="regenCode(\''+code+'\')"><i class="fas fa-rotate"></i></button></div><div class="ud-row"><span>Statistics</span><button class="ud-edit-btn" onclick="showAgentStats(\''+code+'\')"><i class="fas fa-question"></i></button></div></div>';
+  }).join('');
+}
+
+async function showAgentStats(code){
+  const snap=await db.ref('support_agents/'+code).get();
+  if(!snap.exists()){showToast('Agent not found.','danger');return;}
+  const a=snap.val();
+  const msgs=a.totalMessages||0;
+  const mins=Math.round((a.totalTime||0)/60000);
+  const edits=a.totalEdits||0;
+  const gens=a.codeGenCount||1;
+  const created=a.createdAt?new Date(a.createdAt).toLocaleDateString():'—';
+  const modal=document.getElementById('lock-modal-bg');
+  document.querySelector('.lock-modal').innerHTML='<div class="lock-modal-title">'+esc(a.name)+'</div><div class="ud-card" style="padding:14px;"><div class="ud-row"><span>Added</span><span>'+created+'</span></div><div class="ud-row"><span>Codes generated</span><span>'+gens+'</span></div><div class="ud-row"><span>Messages answered</span><span>'+msgs+'</span></div><div class="ud-row"><span>Messages edited</span><span>'+edits+'</span></div><div class="ud-row"><span>Time in support</span><span>'+mins+' min</span></div></div><div class="lock-modal-btns"><button class="lock-modal-btn cancel" onclick="closeLockModal()">Close</button></div>';
+  modal.classList.add('on');
+}
+
+
+async function checkSupLockStatus(){
+  const snap=await db.ref('support_config/locked').get();
+  updateSupLockUI(snap.exists()?snap.val():false);
+}
+
+async function regenCode(oldCode){
+  const snap=await db.ref('support_agents/'+oldCode).get();
+  if(!snap.exists()){showToast('Agent not found.','danger');return;}
+  const agent=snap.val();
+  let newCode='';
+  for(let i=0;i<8;i++)newCode+=String.fromCharCode(65+Math.floor(Math.random()*26));
+  newCode+=Math.floor(1000+Math.random()*9000);
+  const gens=(agent.codeGenCount||1)+1;
+  agent.code=newCode;
+  agent.codeGenCount=gens;
+  agent.used=false;
+  await db.ref('support_agents/'+oldCode).remove();
+  await db.ref('support_agents/'+newCode).set(agent);
+  loadSupCodes();
+  showToast('New code: '+newCode);
+}
+
+let _tt=null;
+function showToast(msg,cls){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='on'+(cls?' '+cls:'');
+  if(_tt)clearTimeout(_tt);
+  _tt=setTimeout(()=>{el.className='';},2600);
+}
+document.getElementById('adm-pw').focus();
+</script>
+</body>
+</html>
